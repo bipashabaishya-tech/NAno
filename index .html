@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-950 text-slate-100">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nana Ba & Nana Ba Vindo Avatar Dress Up Studio</title>
+    <!-- Tailwind CSS for responsive modern styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- JSZip for dynamic multi-file project bundling -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    
+    <style>
+        /* Custom scrollbar for dark theme UI */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+
+        /* Canvas container & checkerboard texture */
+        .canvas-wrapper {
+            position: relative;
+            background-image: 
+                linear-gradient(45deg, #1e293b 25%, transparent 25%), 
+                linear-gradient(-45deg, #1e293b 25%, transparent 25%), 
+                linear-gradient(45deg, transparent 75%, #1e293b 75%), 
+                linear-gradient(-45deg, transparent 75%, #1e293b 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+        }
+
+        .active-tab {
+            border-bottom: 2px solid #6366f1;
+            color: #818cf8;
+            background-color: rgba(30, 41, 59, 0.5);
+        }
+
+        /* Color swatch glow effect */
+        .swatch-btn {
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+        .swatch-btn:hover {
+            transform: scale(1.15);
+            z-index: 10;
+        }
+    </style>
+</head>
+<body class="h-full flex flex-col font-sans antialiased bg-slate-950 text-slate-100 overflow-x-hidden">
+
+    <!-- Top Header & Navigation Bar -->
+    <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+            <div class="flex items-center space-x-3">
+                <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-500 to-pink-500 flex items-center justify-center font-bold text-white shadow-lg shadow-indigo-500/20">
+                    NB
+                </div>
+                <div>
+                    <h1 class="text-base font-bold bg-gradient-to-r from-indigo-300 via-purple-300 to-pink-300 bg-clip-text text-transparent">
+                        Nana Ba & Nana Ba Vindo Studio
+                    </h1>
+                    <p class="text-xs text-slate-400">Texture-Preserving Dress Up & Styling App</p>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-2 sm:space-x-3">
+                <!-- Export Canvas Button -->
+                <button id="exportImageBtn" class="px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-medium bg-emerald-600/20 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-600/30 transition flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                    <span class="hidden sm:inline">Export Image</span>
+                </button>
+
+                <!-- Download 4-File Project ZIP Button -->
+                <button id="downloadZipBtn" class="px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-medium bg-indigo-600 text-white hover:bg-indigo-500 transition shadow-lg shadow-indigo-600/30 flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    <span>Download Project (.ZIP)</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Studio Workspace -->
+    <main class="flex-grow max-w-7xl w-full mx-auto p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- Left Column: Asset Uploaders & Canvas Viewport (7 Cols) -->
+        <section class="lg:col-span-7 flex flex-col gap-4">
+            
+            <!-- Asset Source Switcher / File Uploaders -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <!-- 1. Couple Image Uploader -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1.5 uppercase tracking-wider">
+                        1. Couple Photo (Chroma/Cutout)
+                    </label>
+                    <input type="file" id="coupleFileInput" accept="image/*" class="block w-full text-xs text-slate-400 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-600/20 file:text-indigo-300 hover:file:bg-indigo-600/30 cursor-pointer bg-slate-950 rounded-xl border border-slate-800 p-1">
+                </div>
+
+                <!-- 2. Venue Background Uploader -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1.5 uppercase tracking-wider">
+                        2. Reception Venue Background
+                    </label>
+                    <input type="file" id="venueFileInput" accept="image/*" class="block w-full text-xs text-slate-400 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-purple-600/20 file:text-purple-300 hover:file:bg-purple-600/30 cursor-pointer bg-slate-950 rounded-xl border border-slate-800 p-1">
+                </div>
+            </div>
+
+            <!-- Interactive Canvas Container -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl flex flex-col items-center">
+                <div class="w-full flex items-center justify-between mb-3 px-1">
+                    <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Interactive Styling Viewport</span>
+                    <button id="resetPaintBtn" class="text-xs px-2.5 py-1 rounded-md bg-rose-500/10 text-rose-400 border border-rose-500/20 hover:bg-rose-500/20 transition">
+                        Reset Paint
+                    </button>
+                </div>
+
+                <!-- Canvas Viewport with Overlay Stack -->
+                <div class="canvas-wrapper rounded-xl border border-slate-800/80 overflow-hidden w-full flex justify-center items-center min-h-[420px]">
+                    <canvas id="mainCanvas" class="max-w-full h-auto cursor-crosshair touch-none shadow-2xl rounded-lg"></canvas>
+                </div>
+                <p class="text-[11px] text-slate-500 mt-2 text-center">
+                    💡 Click on garments using the <span class="text-indigo-400 font-medium">Fill Bucket</span> or draw with <span class="text-indigo-400 font-medium">Brush</span> to recolor while preserving fabric textures.
+                </p>
+            </div>
+        </section>
+
+        <!-- Right Column: Tools, Color Palettes & File Architecture Inspector (5 Cols) -->
+        <section class="lg:col-span-5 flex flex-col gap-4">
+            
+            <!-- Tools Control Panel -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl">
+                <h2 class="text-xs font-semibold text-slate-400 mb-3 uppercase tracking-wider">Styling Tools</h2>
+                
+                <!-- Tool Selector Buttons -->
+                <div class="grid grid-cols-3 gap-2 mb-4">
+                    <button id="toolBrush" class="tool-btn flex flex-col items-center justify-center p-2.5 rounded-xl border border-indigo-500 bg-indigo-600/20 text-indigo-300 font-medium text-xs gap-1 transition">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                        Brush
+                    </button>
+                    <button id="toolFill" class="tool-btn flex flex-col items-center justify-center p-2.5 rounded-xl border border-slate-800 bg-slate-950 text-slate-400 hover:text-slate-200 font-medium text-xs gap-1 transition">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
+                        Fill Bucket
+                    </button>
+                    <button id="toolEraser" class="tool-btn flex flex-col items-center justify-center p-2.5 rounded-xl border border-slate-800 bg-slate-950 text-slate-400 hover:text-slate-200 font-medium text-xs gap-1 transition">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                        Eraser
+                    </button>
+                </div>
+
+                <!-- Brush Thickness Slider -->
+                <div id="brushSizeGroup" class="bg-slate-950 p-3 rounded-xl border border-slate-800">
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-xs text-slate-400">Brush Diameter</span>
+                        <span id="brushSizeVal" class="text-xs font-mono text-indigo-400">12px</span>
+                    </div>
+                    <input type="range" id="brushSize" min="2" max="60" value="12" class="w-full accent-indigo-500 h-1.5 bg-slate-800 rounded-lg cursor-pointer">
+                </div>
+            </div>
+
+            <!-- Color Palettes Panel -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl">
+                <div class="flex justify-between items-center mb-3">
+                    <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Custom Palette</h2>
+                    <div class="flex items-center gap-2 bg-slate-950 px-2 py-1 rounded-lg border border-slate-800">
+                        <input type="color" id="customColorPicker" value="#800000" class="w-5 h-5 rounded cursor-pointer bg-transparent border-0">
+                        <span id="hexDisplay" class="text-xs font-mono text-slate-300">#800000</span>
+                    </div>
+                </div>
+
+                <!-- Presets Category 1: Assamese Silk & Heritage Colors -->
+                <div class="mb-3">
+                    <span class="text-[11px] font-medium text-slate-400 block mb-1.5">Assamese Silk & Heritage Tones</span>
+                    <div class="flex flex-wrap gap-2">
+                        <button class="swatch-btn w-7 h-7 rounded-full border border-white/20" style="background-color: #800000;" data-color="#800000" title="Rich Maroon"></button>
+                        <button class="swatch-btn w-7 h-7 rounded-full border border-white/20" style="background-color: #d4af37;" data-color="#d4af37" title="Muga Silk Gold"></button>
+                        <button class="swatch-btn w-7 h-7 rounded-full border border-white/20" style="background-color: #f3b7c4;" data-color="#f3b7c4" title="Blush Pink"></button>
+                        <button class="swatch-btn w-7 h-7 rounded-full border border-white/20" style="background-color: #e52e3d;" data-color="#e52e3d" title="Gamusa Crimson"></button>
+                        <button class="swatch-btn w-7 h-7 rounded-full border border-white/20" style="background-color: #047857;" data-color="#047857" title="Emerald Green"></button>
+                        <button class="swatch-btn w-7 h-7 rounded-full border border-white/20" style="background-color: #1e3a8a;" data-color="#1e3a8a" title="Royal Navy"></button>
+                    </div>
+                </div>
+
+                <!-- Presets Category 2: Venue Decor Tones -->
+                <div>
+                    <span class="text-[11px] font-medium text-slate-400 block mb-1.5">Venue & Ambient Decor Tones</span>
+                    <div class="flex flex-wrap gap-2">
+                        <button class="swatch-btn w-7 h-7 rounded-full border border-white/20" style="background-color: #f4ead5;" data-color="#f4ead5" title="Ivory Drapes"></button>
+                        <button class="swatch-btn w-7 h-7 rounded-full border border-white/20" style="background-color: #e3ba6c;" data-color="#e3ba6c" title="Chandelier Gold"></button>
+                        <button class="swatch-btn w-7 h-7 rounded-full border border-white/20" style="background-color: #ffffff;" data-color="#ffffff" title="Pure White"></button>
+                        <button class="swatch-btn w-7 h-7 rounded-full border border-white/20" style="background-color: #4a5d23;" data-color="#4a5d23" title="Foliage Green"></button>
+                        <button class="swatch-btn w-7 h-7 rounded-full border border-white/20" style="background-color: #111827;" data-color="#111827" title="Midnight Black"></button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Project Architecture Inspector (4-File Preview Tabs) -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl flex flex-col flex-grow">
+                <div class="flex items-center justify-between mb-3">
+                    <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Project Architecture</h2>
+                    <span class="text-[10px] bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 px-2 py-0.5 rounded-full font-mono">4 Modules</span>
+                </div>
+
+                <!-- File Tabs -->
+                <div class="flex border-b border-slate-800 text-xs font-mono mb-2 overflow-x-auto">
+                    <button class="file-tab active-tab px-3 py-2 whitespace-nowrap" data-file="index.html">index.html</button>
+                    <button class="file-tab px-3 py-2 text-slate-400 hover:text-slate-200 whitespace-nowrap" data-file="style.css">style.css</button>
+                    <button class="file-tab px-3 py-2 text-slate-400 hover:text-slate-200 whitespace-nowrap" data-file="script.js">script.js</button>
+                    <button class="file-tab px-3 py-2 text-slate-400 hover:text-slate-200 whitespace-nowrap" data-file="images">images/</button>
+                </div>
+
+                <!-- File Code Box -->
+                <div class="bg-slate-950 rounded-xl p-3 border border-slate-800/80 font-mono text-[11px] text-slate-300 h-36 overflow-y-auto leading-relaxed">
+                    <pre id="codeInspector"><code>&lt;!-- index.html --&gt;
+&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+&lt;head&gt;
+  &lt;link rel="stylesheet" href="style.css"&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;div id="app"&gt;&lt;/div&gt;
+  &lt;script src="script.js"&gt;&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Application Logic & Canvas Engine -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Main Canvas Elements
+            const canvas = document.getElementById('mainCanvas');
+            const ctx = canvas.getContext('2d', { willReadFrequently: true });
+            
+            // Offscreen Layer Canvases for Texture-Preserving Recolor Engine
+            const fgCanvas = document.createElement('canvas');
+            const fgCtx = fgCanvas.getContext('2d', { willReadFrequently: true });
+            
+            const colorCanvas = document.createElement('canvas');
+            const colorCtx = colorCanvas.getContext('2d', { willReadFrequently: true });
+            
+            const charCompositeCanvas = document.createElement('canvas');
+            const charCtx = charCompositeCanvas.getContext('2d', { willReadFrequently: true });
+
+            // State Variables
+            let currentTool = 'brush';
+            let currentColor = '#800000';
+            let currentBrushSize = 12;
+            let isDrawing = false;
+
+            // DOM Elements
+            const customColorPicker = document.getElementById('customColorPicker');
+            const hexDisplay = document.getElementById('hexDisplay');
+            const brushSizeInput = document.getElementById('brushSize');
+            const brushSizeVal = document.getElementById('brushSizeVal');
+            const resetPaintBtn = document.getElementById('resetPaintBtn');
+            const exportImageBtn = document.getElementById('exportImageBtn');
+            const downloadZipBtn = document.getElementById('downloadZipBtn');
+            const coupleFileInput = document.getElementById('coupleFileInput');
+            const venueFileInput = document.getElementById('venueFileInput');
+
+            // Set canvas initial dimensions
+            const defaultWidth = 460;
+            const defaultHeight = 580;
+
+            function resizeCanvases(w, h) {
+                canvas.width = w;
+                canvas.height = h;
+                fgCanvas.width = w;
+                fgCanvas.height = h;
+                colorCanvas.width = w;
+                colorCanvas.height = h;
+                charCompositeCanvas.width = w;
+                charCompositeCanvas.height = h;
+            }
+
+            resizeCanvases(defaultWidth, defaultHeight);
+
+            // Generate Vector Couple Fallback SVG
+            function generateCoupleFallbackSVG() {
+                return `data:image/svg+xml;utf8,` + encodeURIComponent(`
+                    <svg xmlns="http://www.w3.org/2000/svg" width="460" height="580" viewBox="0 0 460 580">
+                        <rect width="460" height="580" fill="none"/>
+                        <!-- Groom Silhouette (Kurta) -->
+                        <path d="M 140 160 Q 180 140 220 160 L 230 480 L 130 480 Z" fill="#e2e8f0"/>
+                        <!-- Groom Head & Skin -->
+                        <circle cx="180" cy="110" r="32" fill="#c0855a"/>
+                        <path d="M 152 92 Q 180 70 208 92 Q 200 78 180 78 Q 160 78 152 92 Z" fill="#1e293b"/>
+                        <!-- Bride Silhouette (Mekhla Saree) -->
+                        <path d="M 210 210 Q 260 190 310 210 L 330 520 L 200 520 Z" fill="#f3b7c4"/>
+                        <!-- Bride Head & Skin -->
+                        <circle cx="260" cy="135" r="28" fill="#e6ba99"/>
+                        <path d="M 235 120 Q 260 100 285 120 Q 285 102 260 100 Q 235 102 235 120 Z" fill="#1e293b"/>
+                    </svg>
+                `);
+            }
+
+            // Generate Venue Backdrop Fallback SVG
+            function generateVenueFallbackSVG() {
+                return `data:image/svg+xml;utf8,` + encodeURIComponent(`
+                    <svg xmlns="http://www.w3.org/2000/svg" width="460" height="580" viewBox="0 0 460 580">
+                        <defs>
+                            <linearGradient id="bgGrad" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stop-color="#0f172a"/>
+                                <stop offset="100%" stop-color="#1e1b4b"/>
+                            </linearGradient>
+                        </defs>
+                        <rect width="460" height="580" fill="url(#bgGrad)"/>
+                        <!-- Arch Drapes -->
+                        <path d="M 20 0 Q 230 180 440 0 L 440 580 L 20 580 Z" fill="#331e38" opacity="0.6"/>
+                        <!-- Chandelier glow -->
+                        <circle cx="230" cy="90" r="45" fill="#fef08a" opacity="0.3"/>
+                        <circle cx="230" cy="90" r="20" fill="#fef08a" opacity="0.6"/>
+                    </svg>
+                `);
+            }
+
+            // Image Instances
+            const coupleImg = new Image();
+            const venueImg = new Image();
+
+            coupleImg.src = generateCoupleFallbackSVG();
+            venueImg.src = generateVenueFallbackSVG();
+
+            let imagesLoaded = 0;
+            function onAssetLoaded() {
+                imagesLoaded++;
+                if (imagesLoaded >= 2) {
+                    renderComposite();
+                }
+            }
+
+            coupleImg.onload = onAssetLoaded;
+            venueImg.onload = onAssetLoaded;
+
+            // Texture-Preserving Composite Rendering Engine
+            function renderComposite() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                // 1. Render Venue Background
+                ctx.drawImage(venueImg, 0, 0, canvas.width, canvas.height);
+
+                // 2. Prepare Foreground Cutout Canvas
+                fgCtx.clearRect(0, 0, fgCanvas.width, fgCanvas.height);
+                fgCtx.drawImage(coupleImg, 0, 0, fgCanvas.width, fgCanvas.height);
+
+                // 3. Build Character & Recolor Layer Stack
+                charCtx.clearRect(0, 0, charCompositeCanvas.width, charCompositeCanvas.height);
+                
+                // Draw base couple photo
+                charCtx.globalCompositeOperation = 'source-over';
+                charCtx.drawImage(fgCanvas, 0, 0);
+
+                // Blend color paint preserving fabric texture
+                charCtx.globalCompositeOperation = 'color';
+                charCtx.drawImage(colorCanvas, 0, 0);
+
+                // Clip paint strictly inside character boundary
+                charCtx.globalCompositeOperation = 'destination-in';
+                charCtx.drawImage(fgCanvas, 0, 0);
+
+                // 4. Draw Final Character Composite over Venue Background
+                ctx.globalCompositeOperation = 'source-over';
+                ctx.drawImage(charCompositeCanvas, 0, 0);
+            }
+
+            // User Custom Image Loaders
+            coupleFileInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const url = URL.createObjectURL(file);
+                    coupleImg.onload = () => {
+                        resizeCanvases(coupleImg.naturalWidth || defaultWidth, coupleImg.naturalHeight || defaultHeight);
+                        renderComposite();
+                    };
+                    coupleImg.src = url;
+                }
+            });
+
+            venueFileInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const url = URL.createObjectURL(file);
+                    venueImg.onload = () => renderComposite();
+                    venueImg.src = url;
+                }
+            });
+
+            // Tool Button Selection Handlers
+            const toolButtons = document.querySelectorAll('.tool-btn');
+            toolButtons.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    toolButtons.forEach(b => {
+                        b.classList.remove('border-indigo-500', 'bg-indigo-600/20', 'text-indigo-300');
+                        b.classList.add('border-slate-800', 'bg-slate-950', 'text-slate-400');
+                    });
+
+                    const target = e.currentTarget;
+                    target.classList.remove('border-slate-800', 'bg-slate-950', 'text-slate-400');
+                    target.classList.add('border-indigo-500', 'bg-indigo-600/20', 'text-indigo-300');
+
+                    if (target.id === 'toolBrush') currentTool = 'brush';
+                    if (target.id === 'toolFill') currentTool = 'fill';
+                    if (target.id === 'toolEraser') currentTool = 'eraser';
+                });
+            });
+
+            // Color Selection Handlers
+            customColorPicker.addEventListener('input', (e) => {
+                currentColor = e.target.value;
+                hexDisplay.textContent = currentColor.toUpperCase();
+            });
+
+            document.querySelectorAll('.swatch-btn').forEach(swatch => {
+                swatch.addEventListener('click', (e) => {
+                    currentColor = e.currentTarget.getAttribute('data-color');
+                    customColorPicker.value = currentColor;
+                    hexDisplay.textContent = currentColor.toUpperCase();
+                });
+            });
+
+            // Brush Size Handler
+            brushSizeInput.addEventListener('input', (e) => {
+                currentBrushSize = parseInt(e.target.value);
+                brushSizeVal.textContent = `${currentBrushSize}px`;
+            });
+
+            // Reset Paint Layer
+            resetPaintBtn.addEventListener('click', () => {
+                colorCtx.clearRect(0, 0, colorCanvas.width, colorCanvas.height);
+                renderComposite();
+            });
+
+            // Coordinates Helper
+            function getCanvasCoords(e) {
+                const rect = canvas.getBoundingClientRect();
+                const scaleX = canvas.width / rect.width;
+                const scaleY = canvas.height / rect.height;
+
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+                return {
+                    x: Math.floor((clientX - rect.left) * scaleX),
+                    y: Math.floor((clientY - rect.top) * scaleY)
+                };
+            }
+
+            // Drawing Event Handlers
+            function startDrawing(e) {
+                isDrawing = true;
+                const { x, y } = getCanvasCoords(e);
+
+                if (currentTool === 'fill') {
+                    executeFloodFill(x, y, hexToRgb(currentColor));
+                    isDrawing = false;
+                    return;
+                }
+
+                draw
